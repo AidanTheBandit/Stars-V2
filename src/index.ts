@@ -15,6 +15,8 @@ export const barkleKey = process.env.BARKLE_API_KEY || "";
 export const nasaKey = process.env.NASA_API_KEY || "";
 export const botUsername = process.env.BOT_USERNAME || "";
 
+logWithTimestamp(`Environment loaded - BARKLE_API_KEY: ${barkleKey ? 'present (' + barkleKey.substring(0, 5) + '...)' : 'missing'}, NASA_API_KEY: ${nasaKey ? 'present' : 'missing'}, BOT_USERNAME: ${botUsername}`);
+
 let previouseNasa = 'DATE';
 let repliedIds: string[] = [];
 
