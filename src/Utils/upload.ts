@@ -3,14 +3,14 @@ const fs = require('fs');
 import { barkleKey } from "..";
 import { getCurrentTimestamp, logWithTimestamp } from "./lwt";
 
-export const upload = async (image: string): Promise<string[] | undefined> => {
+export const upload = async (image: string, token: string): Promise<string[] | undefined> => {
   try {
     const driveResponse = await axios.post('https://barkle.chat/api/drive/files/upload-from-url', {
       url: image,
       force: true,
     }, {
       headers: {
-        Authorization: `Bearer ${barkleKey}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -22,7 +22,7 @@ export const upload = async (image: string): Promise<string[] | undefined> => {
         limit: 1,
       }, {
         headers: {
-          Authorization: `Bearer ${barkleKey}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 

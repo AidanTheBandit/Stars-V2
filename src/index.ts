@@ -13,7 +13,7 @@ dotenv.config();
 export const barkle = "https://barkle.chat/api";
 export const barkleKey = process.env.BARKLE_API_KEY || "";
 export const nasaKey = process.env.NASA_API_KEY || "";
-export const botUsername = process.env.BOT_USERNAME || "";
+export const botUsername = process.env. || "";
 
 let previouseNasa = 'DATE';
 let repliedIds: string[] = [];
@@ -29,8 +29,10 @@ const runScheduledJob = () => {
   schedule.scheduleJob('*/20 * * * *', async () => {
     const nasaData = await checkNasa();
     if (nasaData) {
-      // Post with image URL in text instead of uploading
-      await postUpdate(`The NASA astronomy picture of the day is in!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}\n\nImage: ${nasaData.url}`, [], barkleKey);
+      const fileIds = await upload(nasaData.url, barkleKey);
+      if (fileIds) {
+        await postUpdate(`The NASA astronomy picture of the day is in!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}`, fileIds, barkleKey);
+      }
     }
   });
   const nextRunTime = schedule.scheduledJobs[Object.keys(schedule.scheduledJobs)[0]].nextInvocation();
@@ -67,29 +69,33 @@ const runScheduledJob = () => {
             logWithTimestamp(`Mention found in note ${notif.note.id}`);
             const nasaData = await getCurrentNasa();
             if (nasaData) {
-              await axios.post(`${barkle}/notes/create`, {
-                text: `Here's the current NASA Astronomy Picture of the Day!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}\n\nImage: ${nasaData.url}`,
-                replyId: notif.note.id,
-              }, {
-                headers: {
-                  Authorization: `Bearer ${barkleKey}`,
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                  'Accept': 'application/json, text/plain, */*',
-                  'Accept-Language': 'en-US,en;q=0.9',
-                  'Content-Type': 'application/json',
-                  'Origin': 'https://barkle.chat',
-                  'Referer': 'https://barkle.chat/',
-                  'Sec-CH-UA': '"Google Chrome";v="91", "Chromium";v="91", ";Not A Brand";v="99"',
-                  'Sec-CH-UA-Mobile': '?0',
-                  'Sec-CH-UA-Platform': '"Windows"',
-                  'Sec-Fetch-Dest': 'empty',
-                  'Sec-Fetch-Mode': 'cors',
-                  'Sec-Fetch-Site': 'same-origin',
-                },
-              });
-              repliedIds.push(notif.note.id);
-              fs.writeFileSync('db.json', JSON.stringify({ lastCheck: new Date(), lastNasa: previouseNasa, repliedIds }));
-              logWithTimestamp('Replied to mention');
+              const fileIds = await upload(nasaData.url, barkleKey);
+              if (fileIds) {
+                await axios.post(`${barkle}/notes/create`, {
+                  text: `Here's the current NASA Astronomy Picture of the Day!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}`,
+                  replyId: notif.note.id,
+                  fileIds: fileIds,
+                }, {
+                  headers: {
+                    Authorization: `Bearer ${barkleKey}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Content-Type': 'application/json',
+                    'Origin': 'https://barkle.chat',
+                    'Referer': 'https://barkle.chat/',
+                    'Sec-CH-UA': '"Google Chrome";v="91", "Chromium";v="91", ";Not A Brand";v="99"',
+                    'Sec-CH-UA-Mobile': '?0',
+                    'Sec-CH-UA-Platform': '"Windows"',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                  },
+                });
+                repliedIds.push(notif.note.id);
+                fs.writeFileSync('db.json', JSON.stringify({ lastCheck: new Date(), lastNasa: previouseNasa, repliedIds }));
+                logWithTimestamp('Replied to mention');
+              }
             }
           }
         }
@@ -104,7 +110,10 @@ const triggerManualCheck = async () => {
   logWithTimestamp('Manual trigger activated...');
   const nasaData = await checkNasa();
   if (nasaData) {
-    await postUpdate(`The NASA astronomy picture of the day is in!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}\n\nImage: ${nasaData.url}`, [], barkleKey);
+    const fileIds = await upload(nasaData.url, barkleKey);
+    if (fileIds) {
+      await postUpdate(`The NASA astronomy picture of the day is in!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}`, fileIds, barkleKey);
+    }
   }
 };
 
@@ -147,23 +156,33 @@ process.stdin.on('keypress', (str, key) => {
               logWithTimestamp(`Mention found in note ${notif.note.id}`);
               const nasaData = await getCurrentNasa();
               if (nasaData) {
-                await axios.post(`${barkle}/notes/create`, {
-                  text: `Here's the current NASA Astronomy Picture of the Day!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}\n\nImage: ${nasaData.url}`,
-                  replyId: notif.note.id,
-                }, {
-                  headers: {
-                    Authorization: `Bearer ${barkleKey}`,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Content-Type': 'application/json',
-                    'Origin': 'https://barkle.chat',
-                    'Referer': 'https://barkle.chat/',
-                  },
-                });
-                repliedIds.push(notif.note.id);
-                fs.writeFileSync('db.json', JSON.stringify({ lastCheck: new Date(), lastNasa: previouseNasa, repliedIds }));
-                logWithTimestamp('Replied to mention');
+                const fileIds = await upload(nasaData.url, barkleKey);
+                if (fileIds) {
+                  await axios.post(`${barkle}/notes/create`, {
+                    text: `Here's the current NASA Astronomy Picture of the Day!\n**${nasaData.title}**\n\n${nasaData.description}\n\nCopyright: ${nasaData.copyright}`,
+                    replyId: notif.note.id,
+                    fileIds: fileIds,
+                  }, {
+                    headers: {
+                      Authorization: `Bearer ${barkleKey}`,
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                      'Accept': 'application/json, text/plain, */*',
+                      'Accept-Language': 'en-US,en;q=0.9',
+                      'Content-Type': 'application/json',
+                      'Origin': 'https://barkle.chat',
+                      'Referer': 'https://barkle.chat/',
+                      'Sec-CH-UA': '"Google Chrome";v="91", "Chromium";v="91", ";Not A Brand";v="99"',
+                      'Sec-CH-UA-Mobile': '?0',
+                      'Sec-CH-UA-Platform': '"Windows"',
+                      'Sec-Fetch-Dest': 'empty',
+                      'Sec-Fetch-Mode': 'cors',
+                      'Sec-Fetch-Site': 'same-origin',
+                    },
+                  });
+                  repliedIds.push(notif.note.id);
+                  fs.writeFileSync('db.json', JSON.stringify({ lastCheck: new Date(), lastNasa: previouseNasa, repliedIds }));
+                  logWithTimestamp('Replied to mention');
+                }
               }
             }
           }
