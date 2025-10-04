@@ -3,42 +3,45 @@ const fs = require('fs');
 import { barkleKey } from "..";
 import { getCurrentTimestamp, logWithTimestamp } from "./lwt";
 
-export const upload = async (image: string, token: string): Promise<string[] | undefined> => {
+export const upload = async (imageUrl: string, token: string): Promise<string[] | undefined> => {
   try {
-    const driveResponse = await axios.post('https://barkle.chat/api/drive/files/upload-from-url', {
-      url: image,
-      force: true,
-    }, {
+    // First, download the image
+    const imageResponse = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
       headers: {
-        Authorization: `Bearer ${token}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
     });
 
-    if (driveResponse.status === 204) {
-      // Wait for 1 minute before checking the drive
-      await new Promise(resolve => setTimeout(resolve, 60000));
-
-      const driveFiles = await axios.post('https://barkle.chat/api/drive/files', {
-        limit: 1,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (driveFiles.status === 200) {
-        const fileIds = [driveFiles.data[0].id];
-        return fileIds;
-      } else {
-        logWithTimestamp("No files found in the drive.");
-        fs.appendFileSync('bot.log', `${getCurrentTimestamp()} - No files found in the drive\n`);
-        return undefined;
-      }
-    } else {
-      throw new Error(`Error uploading image to drive. Status code: ${driveResponse.status}`);
+    if (imageResponse.status !== 200) {
+      throw new Error(`Failed to download image. Status: ${imageResponse.status}`);
     }
-  } catch (driveError: any) {
-    logWithTimestamp(`Error uploading image to the drive: ${driveError.message}`);
+
+    const imageBuffer = Buffer.from(imageResponse.data);
+    const fileName = `nasa-apod-${Date.now()}.jpg`; // Assuming JPEG, but could be determined from content-type
+
+    // Now upload to Misskey drive
+    const FormData = require('form-data');
+    const form = new FormData();
+    form.append('file', imageBuffer, { filename: fileName });
+    form.append('i', token); // Access token
+
+    const uploadResponse = await axios.post('https://barkle.chat/api/drive/files/create', form, {
+      headers: {
+        ...form.getHeaders(),
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (uploadResponse.status === 200) {
+      const fileId = uploadResponse.data.id;
+      logWithTimestamp(`Uploaded file with ID: ${fileId}`);
+      return [fileId];
+    } else {
+      throw new Error(`Error uploading to drive. Status: ${uploadResponse.status}`);
+    }
+  } catch (error: any) {
+    logWithTimestamp(`Error uploading image: ${error.message}`);
     return undefined;
   }
 }

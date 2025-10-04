@@ -13,7 +13,7 @@ dotenv.config();
 export const barkle = "https://barkle.chat/api";
 export const barkleKey = process.env.BARKLE_API_KEY || "";
 export const nasaKey = process.env.NASA_API_KEY || "";
-export const botUsername = process.env. || "";
+export const botUsername = process.env.BOT_USERNAME || "";
 
 let previouseNasa = 'DATE';
 let repliedIds: string[] = [];
