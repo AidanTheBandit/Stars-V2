@@ -3,3 +3,5 @@ build
 dist
 .env
 package-lock.json
+db.json
+bot.log
