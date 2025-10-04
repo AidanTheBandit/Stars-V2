@@ -3,7 +3,7 @@ const fs = require('fs');
 import { barkleKey } from "..";
 import { getCurrentTimestamp, logWithTimestamp } from "./lwt";
 
-export const postUpdate = async (message: string, fileIds: string) => {
+export const postUpdate = async (message: string, fileIds: string[]) => {
     try {
       logWithTimestamp('Preparing to post update to Barkle.Chat...');
   
@@ -13,22 +13,22 @@ export const postUpdate = async (message: string, fileIds: string) => {
         fileIds: fileIds,
       }, {
         headers: {
-          Authorization: 'Bearer fzNPQk4njCXHvO8PAvtoa1FsNq9QZsEB',
+          Authorization: `Bearer ${barkleKey}`,
         },
       });
   
-      logWithTimestamp('Posted update to Barkle.Chat successfully:', response.data);
-    } catch (error) {
-      logWithTimestamp('Error in postUpdate to Barkle.Chat:', error.message);
+      logWithTimestamp(`Posted update to Barkle.Chat successfully: ${response.data}`);
+    } catch (error: any) {
+      logWithTimestamp(`Error in postUpdate to Barkle.Chat: ${error.message}`);
       if (error.response) {
-        logWithTimestamp('Error data', error.response.data);
-        logWithTimestamp('Error status', error.response.status);
-        logWithTimestamp('Error headers', error.response.headers);
+        logWithTimestamp(`Error data: ${error.response.data}`);
+        logWithTimestamp(`Error status: ${error.response.status}`);
+        logWithTimestamp(`Error headers: ${error.response.headers}`);
       } else if (error.request) {
-        logWithTimestamp('Error request', error.request);
+        logWithTimestamp(`Error request: ${error.request}`);
       } else {
-        logWithTimestamp('General Error', error.message);
+        logWithTimestamp(`General Error: ${error.message}`);
       }
-      logWithTimestamp('Error config', error.config);
+      logWithTimestamp(`Error config: ${error.config}`);
     }
   };
