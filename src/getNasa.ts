@@ -67,3 +67,29 @@ export const checkNasa = async (): Promise<NasaData | null> => {
       return null;
     }
   };
+
+export const getCurrentNasa = async (): Promise<{url: string, title: string, description: string, copyright: string} | null> => {
+  try {
+    logWithTimestamp('Fetching current NASA APOD...');
+    const response = await axios.get('https://api.nasa.gov/planetary/apod', {
+      params: {
+        api_key: nasaKey,
+      },
+    });
+
+    if (response.data.media_type === 'image') {
+      return {
+        url: response.data.hdurl,
+        title: response.data.title,
+        description: response.data.explanation,
+        copyright: response.data.copyright
+      };
+    } else {
+      logWithTimestamp(`NASA API returned a non-image media type`);
+      return null;
+    }
+  } catch (error: any) {
+    logWithTimestamp(`Error fetching NASA: ${error.message}`);
+    return null;
+  }
+};

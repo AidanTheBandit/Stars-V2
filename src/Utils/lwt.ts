@@ -1,6 +1,7 @@
 export const getCurrentTimestamp = () => {
     const now = new Date();
-    const timestamp = now.toISOString().replace('T', ' ').substr(0, 19);
+    const estTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+    const timestamp = estTime.toISOString().replace('T', ' ').substr(0, 19);
     return timestamp;
   };
   
